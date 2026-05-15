@@ -1,19 +1,21 @@
-# 🛍️ Automated Pickup Service
+# Automated Pickup Service
+
+Built by Jun Alvior.
 
 A professional, high-performance web application designed to streamline inventory management and order fulfillment for local businesses. This system leverages Google Sheets as a lightweight, real-time database, Firebase for secure authentication, and event-driven automation for customer notifications.
 
 ![Architecture Diagram](./online_pickup_system_architecture.svg)
 
-## ✨ Features
+## Features
 
-- **🌐 Public Inventory**: A read-only product catalog pulled directly from Google Sheets, allowing anyone to browse without logging in.
-- **🔐 Secure Authentication**: Firebase Auth integration supporting Email/Password and Google SSO for customer accounts.
-- **🛒 Order Management**: Seamless ordering process for authenticated users with real-time status tracking.
-- **🛠️ Admin Dashboard**: Dedicated interface for store owners to manage pending orders and update fulfillment status.
-- **✉️ Automated Notifications**: Event-driven email alerts via Resend when orders are placed and when they are ready for pickup.
-- **💎 Premium UI**: Built with a modern glassmorphic aesthetic using Tailwind CSS 4, Framer Motion, and Anime.js for fluid interactions.
+- **Public Inventory**: A read-only product catalog pulled directly from Google Sheets, allowing anyone to browse without logging in.
+- **Secure Authentication**: Firebase Auth integration supporting Email/Password and Google SSO for customer accounts.
+- **Order Management**: Seamless ordering process for authenticated users with real-time status tracking.
+- **Admin Dashboard**: Dedicated interface for store owners to manage pending orders and update fulfillment status.
+- **Automated Notifications**: Event-driven email alerts via Resend when orders are placed and when they are ready for pickup.
+- **Premium UI**: Built with a modern glassmorphic aesthetic using Tailwind CSS 4, Framer Motion, and Anime.js for fluid interactions.
 
-## 🚀 Tech Stack
+## Tech Stack
 
 - **Frontend**: [React](https://reactjs.org/) + [Vite](https://vitejs.dev/)
 - **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) + [Framer Motion](https://www.framer.com/motion/) + [Anime.js](https://animejs.com/)
@@ -22,7 +24,7 @@ A professional, high-performance web application designed to streamline inventor
 - **Backend**: [Vercel Serverless Functions](https://vercel.com/docs/functions)
 - **Emails**: [Resend](https://resend.com/)
 
-## 🛠️ Setup & Installation
+## Setup & Installation
 
 ### 1. Prerequisites
 - Node.js (v18 or higher)
@@ -67,7 +69,7 @@ RESEND_API_KEY=...
 npm run dev
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 The system operates on four technology pillars:
 1.  **Identity**: Managed by Firebase Auth.
@@ -75,10 +77,10 @@ The system operates on four technology pillars:
 3.  **Order Flow**: Orders are captured in Google Sheets, which serves as the primary source of truth.
 4.  **Automation**: Serverless functions trigger email workflows based on order state changes.
 
-## 📜 License
+## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+This project is free and open source. You are free to copy, modify, and use this system as long as you can fully set it up and configure it for your own needs.
 
 ---
 
-Built with ❤️ for local businesses.
+Built by Jun Alvior for local businesses.
