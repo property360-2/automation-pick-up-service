@@ -46,17 +46,40 @@ export default async function handler(req, res) {
 
     const rows = await orderSheet.getRows();
     
-    // Filter orders by email and map to clean object structure
-    const userOrders = rows
-      .filter(row => row.get('CustomerEmail')?.toLowerCase() === email.toLowerCase())
-      .map(row => ({
-        orderId: row.get('OrderID'),
-        customerName: row.get('CustomerName'),
-        customerEmail: row.get('CustomerEmail'),
-        total: row.get('Total'),
-        status: row.get('Status') || 'Pending',
-        timestamp: row.get('Timestamp'),
-        items: JSON.parse(row.get('Items') || '[]'),
+    // Group rows by OrderID for the specific email
+    const ordersMap = {};
+
+    rows.forEach(row => {
+      const customerEmail = row.get('CustomerEmail');
+      if (customerEmail?.toLowerCase() === email.toLowerCase()) {
+        const orderId = row.get('OrderID');
+        if (!ordersMap[orderId]) {
+          ordersMap[orderId] = {
+            orderId: orderId,
+            customerName: row.get('CustomerName'),
+            customerEmail: customerEmail,
+            status: row.get('Status') || 'Pending',
+            timestamp: row.get('Timestamp'),
+            items: [],
+            total: 0,
+          };
+        }
+        
+        const itemTotal = parseFloat(row.get('ItemTotal') || 0);
+        ordersMap[orderId].items.push({
+          name: row.get('ProductName'),
+          price: row.get('Price'),
+          quantity: row.get('Quantity'),
+          itemTotal: itemTotal,
+        });
+        ordersMap[orderId].total += itemTotal;
+      }
+    });
+
+    const userOrders = Object.values(ordersMap)
+      .map(order => ({
+        ...order,
+        total: order.total.toFixed(2),
       }))
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Most recent first
 

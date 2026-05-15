@@ -28,15 +28,36 @@ export default async function handler(req, res) {
     const sheet = doc.sheetsByTitle['Orders'];
     const rows = await sheet.getRows();
 
-    const orders = rows.map(row => ({
-      orderId: row.get('OrderID'),
-      customerName: row.get('CustomerName'),
-      customerEmail: row.get('CustomerEmail'),
-      items: JSON.parse(row.get('Items') || '[]'),
-      total: row.get('Total'),
-      status: row.get('Status'),
-      timestamp: row.get('Timestamp'),
-      rowIndex: row.rowNumber, // Needed for updates
+    // Group rows by OrderID
+    const ordersMap = {};
+
+    rows.forEach(row => {
+      const orderId = row.get('OrderID');
+      if (!ordersMap[orderId]) {
+        ordersMap[orderId] = {
+          orderId: orderId,
+          customerName: row.get('CustomerName'),
+          customerEmail: row.get('CustomerEmail'),
+          status: row.get('Status'),
+          timestamp: row.get('Timestamp'),
+          items: [],
+          total: 0,
+        };
+      }
+      
+      const itemTotal = parseFloat(row.get('ItemTotal') || 0);
+      ordersMap[orderId].items.push({
+        name: row.get('ProductName'),
+        price: row.get('Price'),
+        quantity: row.get('Quantity'),
+        itemTotal: itemTotal,
+      });
+      ordersMap[orderId].total += itemTotal;
+    });
+
+    const orders = Object.values(ordersMap).map(order => ({
+      ...order,
+      total: order.total.toFixed(2),
     }));
 
     // Sort by most recent

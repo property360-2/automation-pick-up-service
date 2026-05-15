@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
     await doc.loadInfo();
 
-    // 2. Write to 'Orders' sheet
+    // 2. Write to 'Orders' sheet (Denormalized/Flat Structure)
     const sheet = doc.sheetsByTitle['Orders'];
     if (!sheet) {
       const availableTabs = Object.keys(doc.sheetsByTitle);
@@ -49,32 +49,22 @@ export default async function handler(req, res) {
       });
     }
 
-    await sheet.addRow({
+    const timestamp = new Date().toISOString();
+    
+    // Create rows for each item in the order
+    const orderRows = items.map(item => ({
       OrderID: orderId,
       CustomerName: customerName,
       CustomerEmail: customerEmail,
-      Items: JSON.stringify(items),
-      Total: total,
+      Timestamp: timestamp,
       Status: 'Pending',
-      Timestamp: new Date().toISOString(),
-    });
+      ProductName: item.name,
+      Price: item.price,
+      Quantity: item.quantity || 1,
+      ItemTotal: (parseFloat(item.price.toString().replace(/[^\d.]/g, '')) * (item.quantity || 1)).toFixed(2),
+    }));
 
-    // 2.1 Write to 'Sales Intelligence' sheet for direct Analytics
-    // This flattens the JSON items so Google Sheets can easily create Pivot Tables/Charts
-    const analyticsSheet = doc.sheetsByTitle['Sales Intelligence'];
-    if (analyticsSheet) {
-      const salesRows = items.map(item => ({
-        OrderID: orderId,
-        ItemName: item.name,
-        Category: item.description?.split(' ')[0] || 'General', // Simple heuristic
-        Price: item.price,
-        Quantity: item.quantity || 1,
-        Subtotal: (parseFloat(item.price.toString().replace(/[^\d.]/g, '')) * (item.quantity || 1)).toFixed(2),
-        Timestamp: new Date().toISOString(),
-        Customer: customerEmail
-      }));
-      await analyticsSheet.addRows(salesRows);
-    }
+    await sheet.addRows(orderRows);
 
     // 3. Send Confirmation Email via Gmail
     console.log('Attempting to send email to:', `"${customerEmail}"`);

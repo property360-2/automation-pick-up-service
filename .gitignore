@@ -32,3 +32,6 @@ yarn-error.log*
 # Local/Scratch files
 scratch/
 .cache/
+
+.vercel
+.env*.local

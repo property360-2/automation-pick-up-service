@@ -39,16 +39,18 @@ export default async function handler(req, res) {
     const sheet = doc.sheetsByTitle['Orders'];
     const rows = await sheet.getRows();
     
-    // Find the row by OrderID
-    const row = rows.find(r => r.get('OrderID') === orderId);
+    // Find all rows matching the OrderID
+    const orderRows = rows.filter(r => r.get('OrderID') === orderId);
     
-    if (!row) {
+    if (orderRows.length === 0) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Update the status column
-    row.set('Status', newStatus);
-    await row.save();
+    // Update the status for all matching rows
+    await Promise.all(orderRows.map(async (row) => {
+      row.set('Status', newStatus);
+      await row.save();
+    }));
 
     // If status is 'Ready', send the pickup notification via Gmail
     if (newStatus === 'Ready') {
