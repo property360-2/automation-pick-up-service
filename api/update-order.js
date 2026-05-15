@@ -1,8 +1,15 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 /**
  * Serverless function to update order status.
@@ -43,26 +50,33 @@ export default async function handler(req, res) {
     row.set('Status', newStatus);
     await row.save();
 
-    // If status is 'Ready', send the pickup notification
+    // If status is 'Ready', send the pickup notification via Gmail
     if (newStatus === 'Ready') {
-      await resend.emails.send({
-        from: process.env.SMTP_FROM_EMAIL || 'notifications@resend.dev',
-        to: customerEmail,
-        subject: `Your Order is Ready for Pickup! - ${orderId}`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
-            <h2 style="color: #10b981;">Good news, ${customerName}!</h2>
-            <p>Your order <strong>${orderId}</strong> is now packed and ready for pickup at our store.</p>
-            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0;"><strong>Pickup Location:</strong> Main Branch</p>
-              <p style="margin: 5px 0 0 0;"><strong>Hours:</strong> 9:00 AM - 6:00 PM</p>
+      try {
+        const mailOptions = {
+          from: `Property360 <${process.env.SMTP_USER}>`,
+          to: customerEmail,
+          subject: `Your Order is Ready for Pickup! - ${orderId}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
+              <h2 style="color: #10b981;">Good news, ${customerName}!</h2>
+              <p>Your order <strong>${orderId}</strong> is now packed and ready for pickup at our store.</p>
+              <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>Pickup Location:</strong> Main Branch</p>
+                <p style="margin: 5px 0 0 0;"><strong>Hours:</strong> 9:00 AM - 6:00 PM</p>
+              </div>
+              <p>Please present your Order ID when you arrive.</p>
+              <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+              <p style="color: #666; font-size: 12px;">&copy; 2026 Property360 Pickup Service</p>
             </div>
-            <p>Please present your Order ID when you arrive.</p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-            <p style="color: #666; font-size: 12px;">&copy; 2026 Property360 Pickup Service</p>
-          </div>
-        `,
-      });
+          `,
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Pickup notification sent successfully via Gmail');
+      } catch (emailError) {
+        console.error('Gmail SMTP Notification Error:', emailError);
+      }
     }
 
     return res.status(200).json({ message: `Order status updated to ${newStatus}` });
